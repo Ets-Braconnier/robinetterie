@@ -1,0 +1,1672 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Robinetterie — Galerie</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="top">
+    <div class="nav-row">
+      <div id="catButtons" class="catButtons"></div>
+      <select id="catSelect" class="catSelect" aria-label="Choisir une marque"></select>
+    </div>
+
+    <div id="subCatButtons" class="subCatButtons"></div>
+  </header>
+  </header>
+
+  <div id="app"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    function sendHeight() {
+      const h = Math.max(
+        document.body ? document.body.scrollHeight : 0,
+        document.documentElement ? document.documentElement.scrollHeight : 0
+      );
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: "resize", height: h }, "*");
+      }
+    }
+    function sendHeightSoon() {
+      requestAnimationFrame(() => {
+        sendHeight();
+        setTimeout(sendHeight, 150);
+        setTimeout(sendHeight, 600);
+      });
+    }
+    window.addEventListener("load", sendHeightSoon);
+    window.addEventListener("resize", sendHeightSoon);
+  </script>
+
+  <!-- Modal descriptif -->
+  <div id="descModal" class="modal" aria-hidden="true">
+    <div class="modalBackdrop" data-close="1"></div>
+    <div class="modalPanel" role="dialog" aria-modal="true" aria-labelledby="descTitle">
+      <button class="modalClose" type="button" aria-label="Fermer" data-close="1">✕</button>
+      <div class="modalHeader">
+        <div id="descTitle" class="modalTitle"></div>
+      </div>
+      <div id="descBody" class="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const IMAGES = {
+      "grohe": ["__placeholder-1__.png", "__placeholder-2__.png", "__placeholder-3__.png"],
+      "paffoni": ["__placeholder-1__.png", "__placeholder-2__.png", "__placeholder-3__.png"],
+
+      // ✅ Liste Schütte complète (tes fichiers)
+      "schutte": [
+        "24556.png",
+        "32210.png",
+        "33100.png",
+        "33106.png",
+        "33110.png",
+        "33116.png",
+        "33120.png",
+        "33126.png",
+        "33180.png",
+        "33186.png",
+        "33190.png",
+        "33196.png",
+        "35676.png",
+        "37955.png",
+        "37965.png",
+        "44106.png",
+        "44306.png",
+        "44406.png",
+        "46951.png",
+        "52445.png",
+        "52450.png",
+        "60046.png",
+        "60090.png",
+        "60096.png",
+        "60170.png",
+        "60179.png",
+        "60200.png",
+        "60202.png",
+        "60203.png",
+        "60220.png",
+        "60222.png",
+        "60226.png",
+        "60230.png",
+        "60531.png",
+        "60690.png",
+        "60700.png",
+        "60740.png",
+        "60791.png",
+        "60811.png",
+        "60947.png",
+        "61861.png",
+        "63431.png",
+        "63441.png",
+        "63451.png",
+        "63461.png",
+        "63471.png",
+        "63852.png",
+        "63861.png",
+        "63867.png",
+        "63872.png",
+        "63877.png",
+        "63878.png",
+        "63961.png",
+        "64160.png",
+        "64830.png",
+        "64860.png",
+        "64870.png",
+        "64926.png",
+        "66111.png",
+        "66116.png",
+        "66121.png",
+        "66340.png",
+        "66410.png",
+        "66421.png",
+        "67111.png",
+        "67131.png",
+        "69511.png",
+        "77266.png",
+        "77410.png",
+        "77430.png",
+        "77440.png",
+        "78016.png",
+        "79116.png",
+        "79126.png",
+        "79142.png",
+        "79147.png",
+        "79161.png",
+        "79162.png",
+        "79166.png",
+        "79167.png",
+        "79586.png",
+        "79616.png",
+        "79700.png",
+        "79705.png",
+        "79760.png",
+        "79770.png",
+        "79966.png",
+      ],
+    };
+
+    /**
+     * ✅ NOMS OFFICIELS (Schütte) : clés = "schutte/xxxx.png"
+     * Si une image n’a pas de nom ici, le code affichera le nom du fichier (sans .png).
+     */
+    const DISPLAY_NAMES = {
+      "schutte/24556.png": "WINDOW Mitigeur évier, noir mat",
+      "schutte/32210.png": "DERBY Mitigeur lavabo, chromé",
+
+      "schutte/33100.png": "LOS ANGELES Mitigeur lavabo, chromé",
+      "schutte/33106.png": "LOS ANGELES Mitigeur lavabo, noir mat",
+      "schutte/33110.png": "LOS ANGELES Mitigeur lavabo, chromé, pour vasque à poser",
+      "schutte/33116.png": "LOS ANGELES Mitigeur lavabo, noir mat, pour vasque à poser",
+      "schutte/33120.png": "LOS ANGELES Mitigeur lavabo, chromé",
+      "schutte/33126.png": "LOS ANGELES Mitigeur lavabo, noir mat",
+
+      "schutte/33180.png": "LOS ANGELES Mitigeur thermostatique de douche, chromé",
+      "schutte/33186.png": "LOS ANGELES Mitigeur thermostatique de douche, noir mat",
+      "schutte/33190.png": "LOS ANGELES Mitigeur thermostatique bain/douche, chromé",
+      "schutte/33196.png": "LOS ANGELES Mitigeur thermostatique bain/douche, noir mat",
+
+      "schutte/37955.png": "ARAGON robinet eau froide, chromé",
+      "schutte/37965.png": "ARAGON robinet eau froide, noir mat",
+
+      "schutte/44106.png": "DENVER Mitigeur lavabo, noir mat",
+      "schutte/44306.png": "DENVER Mitigeur bain/douche, noir mat",
+      "schutte/44406.png": "DENVER Mitigeur douche, noir mat",
+
+      "schutte/46951.png": "LIMA robinet eau froide, chromé",
+
+      "schutte/52445.png": "VICO Mitigeur thermostatique de douche, chromé",
+      "schutte/52450.png": "VICO Mitigeur thermostatique bain/douche, chromé",
+
+      "schutte/60046.png": "MADURA FRESH Set douche de pluie avec Mitigeur thermostatique, chromé",
+      "schutte/60090.png": "TOKYO Set douche de pluie, chromé",
+      "schutte/60096.png": "TOKYO Set de douche de tête, noir mat",
+      "schutte/60170.png": "TRENTO Set douche de pluie avec Mitigeur thermostatique, noir mat",
+      "schutte/60179.png": "GRAN CANARIA set douche de pluie, noir mat, avec Mitigeur thermostatique",
+      "schutte/60531.png": "OCEAN Set douche de pluie avec Mitigeur thermostatique, chromé/anthracite, avec tablette",
+      "schutte/60690.png": "MADEIRA Set douche de pluie, chromé/blanc",
+
+      "schutte/60200.png": "KARIBIK Douchette à main, chromé/gris clair",
+      "schutte/60202.png": "KARIBIK Douchette à main, graphite mat",
+      "schutte/60203.png": "KARIBIK Douchette à main, noir mat",
+      "schutte/60220.png": "HAWAII Douchette à main, chromé/gris clair, carré",
+      "schutte/60222.png": "HAWAII Douchette à main, graphite mat, carré",
+      "schutte/60226.png": "HAWAII Douchette à main, noir mat, carré",
+      "schutte/60230.png": "SUMATRA douchette à main, chromé/blanc",
+
+      "schutte/60700.png": "BELLAQUA Douchette à main, chromé",
+      "schutte/60740.png": "NAPOLI Douchette à main, chromé",
+      "schutte/60791.png": "AQUA2SAVE Douchette à main, chromé",
+      "schutte/60811.png": "BARI Douchette à main, chromé",
+      "schutte/60947.png": "MADURA Douche de tête, chromé",
+      "schutte/61861.png": "ADRIA Set de douchette, chromé",
+
+      "schutte/63431.png": "Flexible de douche 80 cm, acier inoxydable, chromé",
+      "schutte/63441.png": "Flexible de douche 125 cm, acier inoxydable, chromé",
+      "schutte/63451.png": "Flexible de douche 150 cm, acier inoxydable, chromé",
+      "schutte/63461.png": "Flexible de douche 200 cm, acier inoxydable, chromé",
+      "schutte/63471.png": "Flexible de douche 175 cm, acier inoxydable, chromé",
+
+      "schutte/63852.png": "Flexible de douche 150 cm, Plastique, noir/chromé",
+      "schutte/63861.png": "Flexible de douche 200 cm, Plastique, noir/chromé",
+      "schutte/63867.png": "Flexible de douche 80 cm, plastique, noir",
+      "schutte/63872.png": "Flexible de douche 150 cm, plastique, graphite mat",
+      "schutte/63877.png": "Flexible de douche 150 cm, noir",
+      "schutte/63878.png": "Flexible de douche 150 cm, blanc mat",
+      "schutte/63961.png": "Flexible de douche 200 cm, Plastique, argent",
+
+      "schutte/64160.png": "FRESH Set barre de douche, chromé",
+      "schutte/64830.png": "NAPOLI Set barre de douche, chromé",
+      "schutte/64860.png": "ADRIA Set barre de douche, chromé",
+      "schutte/64870.png": "FLORENZ Set barre de douche, chromé",
+      "schutte/64926.png": "RAVEN set barre de douche, noir mat",
+
+      "schutte/66111.png": "Support de douchette, chromé, Montage mural",
+      "schutte/66116.png": "Support de douchette, noir mat, pour montage mural",
+      "schutte/66121.png": "Support de douchette, chromé, Montage mural",
+
+      "schutte/66340.png": "Support de douchette DN 18/22/25 mm, chromé, pour Barre de douche",
+      "schutte/66410.png": "Curseur pour barre de douche DN 18 mm, chromé, avec Pivot",
+      "schutte/66421.png": "LT MV-1PR Pièce articulée, chromé, 1/2\", pour Pivot",
+
+      "schutte/67111.png": "STELLA Barre de douche, chromé",
+      "schutte/67131.png": "SIGNO Barre de douche, chromé, réglable en hauteur",
+      "schutte/69511.png": "AVIGNON inverseur 3 voies, chromé",
+
+      "schutte/77266.png": "GRANDE Mitigeur évier, noir mat",
+
+      "schutte/77410.png": "PORTO Mitigeur lavabo, chromé",
+      "schutte/77430.png": "PORTO Mitigeur bain/douche, chromé",
+      "schutte/77440.png": "PORTO Mitigeur douche, chromé",
+
+      "schutte/78016.png": "Set de douche pour lavabo, chromé",
+
+      "schutte/79116.png": "CORNWALL Mitigeur évier, chromé",
+      "schutte/79126.png": "CORNWALL Mitigeur évier, apparence inox",
+      "schutte/79161.png": "CORNWALL Mitigeur évier, blanc mat",
+      "schutte/79162.png": "CORNWALL Mitigeur évier, graphite mat",
+      "schutte/79166.png": "CORNWALL Mitigeur évier, noir mat",
+      "schutte/79167.png": "CORNWALL Mitigeur évier, or mat",
+
+      "schutte/79142.png": "MIAMI Mitigeur évier avec ressort en spirale, graphite mat",
+      "schutte/79147.png": "MIAMI Mitigeur évier, noir mat, avec flexible soft-touch",
+
+      "schutte/79586.png": "GLASGOW Mitigeur évier, noir mat, avec flexible soft-touch",
+      "schutte/79616.png": "YORK Mitigeur évier, chromé",
+
+      "schutte/79700.png": "LONDON Mitigeur évier, chromé, avec bec extractible",
+      "schutte/79705.png": "LONDON Mitigeur évier, apparence inox, avec bec extractible",
+      "schutte/79760.png": "LONDON Mitigeur évier, noir mat, avec bec extractible",
+      "schutte/79770.png": "LONDON Mitigeur évier, or mat, avec bec extractible",
+
+      "schutte/79966.png": "CARDIFF Mitigeur évier, noir mat"
+    };
+
+    const DESCRIPTIFS = {
+      "schutte/77440.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "Garantie : 5 ans"
+      ],
+      "schutte/77430.png": [
+        "saillie env. 160 mm",
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/44406.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "Garantie : 5 ans"
+      ],
+      "schutte/44306.png": [
+        "saillie env. 150 mm",
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/52445.png": [
+        "graduation de température avec arrêt de sécurité à 38 °C",
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        'tête de valve en céramique ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33180.png": [
+        'élément thermostatique „Made in Europe“',
+        "fonction éco-stop — jusqu'à 50 % d'eau économisé",
+        "graduation de température avec arrêt de sécurité à 38 °C",
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        'tête de valve en céramique ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33186.png": [
+        'élément thermostatique „Made in Europe“',
+        "fonction éco-stop — jusqu'à 50 % d'eau économisé",
+        "graduation de température avec arrêt de sécurité à 38 °C",
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        'tête de valve en céramique ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "Garantie : 5 ans"
+      ],
+      "schutte/52450.png": [
+        "graduation de température avec arrêt de sécurité à 38 °C",
+        "saillie env. 155 mm",
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        'tête de valve en céramique ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33190.png": [
+        'élément thermostatique „Made in Europe“',
+        "graduation de température avec arrêt de sécurité à 38 °C",
+        "saillie env. 165 mm",
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        'tête de valve en céramique ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "mousseur de marque pour un jet parfait",
+        "avec matériel de montage",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33196.png": [
+        'élément thermostatique „Made in Europe“',
+        "graduation de température avec arrêt de sécurité à 38 °C",
+        "saillie env. 165 mm",
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        'tête de valve en céramique ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "mousseur de marque pour un jet parfait",
+        "avec matériel de montage",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33100.png": [
+        "fonction éco-clic — jusqu'à 50 % d'eau économisé",
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        'bonde de lavabo quick-clac en métal 1 ¼" (Ø env. 4 cm)',
+        "perforation pour tirette excentrique prévue",
+        "flexibles de raccordement env. 400 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33106.png": [
+        "fonction éco-clic — jusqu'à 50 % d'eau économisé",
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        'bonde de lavabo quick-clac en métal 1 ¼" (Ø env. 4 cm)',
+        "perforation pour tirette excentrique prévue",
+        "flexibles de raccordement env. 400 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33120.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "protection anti-brûlure réglable",
+        "bec pivotant à 360°",
+        'bonde de lavabo quick-clac en métal 1 ¼" (Ø env. 4 cm)',
+        "mousseur de marque pour un jet parfait",
+        "flexibles de raccordement env. 400 mm",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33126.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "protection anti-brûlure réglable",
+        "bec pivotant à 360°",
+        'bonde de lavabo quick-clac en métal 1 ¼" (Ø env. 4 cm)',
+        "mousseur de marque pour un jet parfait",
+        "flexibles de raccordement env. 400 mm",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33110.png": [
+        "fonction éco-clic — jusqu'à 50 % d'eau économisé",
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/33116.png": [
+        "fonction éco-clic — jusqu'à 50 % d'eau économisé",
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/77410.png": [
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        'bonde de lavabo en ABS 1 ¼" (Ø env. 4 cm)',
+        "flexibles de raccordement env. 400 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/44106.png": [
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        'bonde de lavabo quick-clac en métal 1 ¼" (Ø env. 4 cm)',
+        "perforation pour tirette excentrique prévue",
+        "flexibles de raccordement env. 400 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/32210.png": [
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "flexibles de raccordement env. 400 mm",
+        "mousseur de marque pour un jet parfait",
+        'bonde de lavabo en ABS 1 ¼" (Ø env. 4 cm)',
+        "Garantie : 5 ans"
+      ],
+      "schutte/46951.png": [
+        "tête de valve à fermeture temporisée avec bouton poussoir en métal",
+        "mousseur de marque pour un jet parfait",
+        "convient uniquement pour le raccordement à l'eau froide",
+        "Garantie : 5 ans"
+      ],
+      "schutte/37955.png": [
+        "convient uniquement pour le raccordement à l'eau froide",
+        "mousseur de marque pour un jet parfait",
+        "cartouche céramique 25 mm silencieuse et remplaçable",
+        "Garantie : 5 ans"
+      ],
+      "schutte/37965.png": [
+        "convient uniquement pour le raccordement à l'eau froide",
+        "mousseur de marque pour un jet parfait",
+        "cartouche céramique 25 mm silencieuse et remplaçable",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79116.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79126.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79162.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79166.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "mousseur de marque pour un jet parfait",
+        "flexibles de raccordement env. 500 mm",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79161.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79167.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "cartouche céramique 35 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79700.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "douchette extractible",
+        "flexible de douche, env. 150 cm",
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "mousseur de marque pour un jet parfait",
+        "flexibles de raccordement env. 600 mm",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79705.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "douchette extractible",
+        "flexible de douche, env. 150 cm",
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "mousseur de marque pour un jet parfait",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 600 mm",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79760.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "douchette extractible",
+        "flexible de douche, env. 150 cm",
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "mousseur de marque pour un jet parfait",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 600 mm",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79770.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "douchette extractible",
+        "flexible de douche, env. 150 cm",
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "mousseur de marque pour un jet parfait",
+        "flexibles de raccordement env. 600 mm",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79142.png": [
+        "manipulation précise grâce au support magnétique",
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "douchette avec 2 jets",
+        "cartouche céramique 25 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79147.png": [
+        "flexible soft-touch",
+        "manipulation précise grâce au support magnétique",
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "douchette avec 2 jets",
+        "cartouche céramique 25 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/77266.png": [
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 400 mm",
+        "mousseur de marque pour un jet parfait",
+        "bec pivotant à 360°",
+        "Garantie : 5 ans"
+      ],
+      "schutte/35676.png": [
+        "bec pivotant à 90°",
+        "douchette extractible avec 2 jets",
+        "flexible de douche, env. 120 cm",
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79616.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "mousseur de marque pour un jet parfait",
+        "flexibles de raccordement env. 400 mm",
+        "Garantie : 5 ans"
+      ],
+      "schutte/24556.png": [
+        "bec pivotant à 360°, rabattable",
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "cartouche céramique 40 mm silencieuse et remplaçable",
+        "montage extra facile grâce à l'écrou de fixation central",
+        "flexibles de raccordement env. 500 mm",
+        "mousseur de marque pour un jet parfait",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79966.png": [
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "mousseur de marque pour un jet parfait",
+        "flexibles de raccordement env. 400 mm",
+        "Garantie : 5 ans"
+      ],
+      "schutte/79586.png": [
+        "flexible soft-touch",
+        "fonction éco-clic — jusqu'à 50 % d'eau économisé",
+        "fonction pratique de démarrage à eau froide pour économiser de l'énergie",
+        "bec pivotant à 360°",
+        "mousseur de marque pour un jet parfait",
+        "flexibles de raccordement env. 500 mm",
+        "cartouche céramique 25 mm silencieuse et remplaçable",
+        "Garantie : 5 ans"
+      ],
+
+      // --- ACCESSOIRES DE DOUCHE (extraits PDF Accessoires) ---
+      "schutte/60200.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60202.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60203.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60220.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60222.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60226.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60230.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60811.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets et fonction stop-eau",
+        "taille : Ø env. 10 cm",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60791.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "4 types de jets et fonction stop-eau",
+        "taille : Ø env. 10 cm",
+        "bouton inverseur pour la fonction stop-eau",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60700.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "2 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/78016.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "picots anti-calcaire",
+        "flexible de douche en acier inoxydable anti-torsion",
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "avec support de douchette",
+        "avec matériel de montage",
+        "Garantie : 5 ans"
+      ],
+      "schutte/61861.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "5 types de jets et fonction stop-eau",
+        "picots anti-calcaire",
+        "flexible de douche en acier inoxydable anti-torsion",
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60947.png": [
+        'raccord ½" (Ø env. 1,9 cm)',
+        "taille : Ø env. 22 cm",
+        "avec rotule",
+        "picots anti-calcaire",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63431.png": [
+        "flexible de douche en acier inoxydable anti-torsion",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 80 cm",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63441.png": [
+        "flexible de douche en acier inoxydable anti-torsion",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 125 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63451.png": [
+        "flexible de douche en acier inoxydable anti-torsion",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63471.png": [
+        "flexible de douche en acier inoxydable anti-torsion",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 175 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63461.png": [
+        "flexible de douche en acier inoxydable anti-torsion",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 200 cm",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63867.png": [
+        "flexible de douche synthétique anti-torsion en noir mat",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 80 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63852.png": [
+        "flexible de douche synthétique anti-torsion chromé/noir",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63961.png": [
+        "flexible de douche synthétique anti-torsion en finition argentée",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 200 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63877.png": [
+        "flexible de douche synthétique anti-torsion en noir mat",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63861.png": [
+        "flexible de douche synthétique anti-torsion chromé/noir",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 200 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63878.png": [
+        "flexible de douche synthétique en blanc",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/63872.png": [
+        "flexible de douche synthétique kink-resistant en graphite mat",
+        'raccords ½" (Ø env. 1,9 cm)',
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/66340.png": [
+        "pour barre de douche de 25 mm de diamètre",
+        "convient à toutes les douchettes courantes",
+        "Garantie : 5 ans"
+      ],
+      "schutte/66410.png": [
+        "pour barre de douche de 18 mm de diamètre",
+        "convient aux douchettes courantes en combinaison avec la pièce articulée (art. 66420)",
+        "avec ergot",
+        "Garantie : 3 ans"
+      ],
+      "schutte/66121.png": ["Garantie : 5 ans"],
+      "schutte/66111.png": ["Garantie : 5 ans"],
+      "schutte/66116.png": ["Garantie : 5 ans"],
+      "schutte/66421.png": ["Garantie : 5 ans"],
+      "schutte/69511.png": ["Garantie : 5 ans"],
+      "schutte/67111.png": [
+        "barre de douche en acier inoxydable",
+        "longueur : env. 60 cm",
+        "Garantie : 5 ans"
+      ],
+      "schutte/67131.png": [
+        "support mural réglable en hauteur",
+        "barre de douche en acier inoxydable",
+        "longueur : env. 70 cm",
+        "support de douchette inclus (avec bouton-poussoir pour le coulissement sur la barre de douche)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/64160.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "7 types de jets et fonction stop-eau",
+        "taille : Ø env. 10 cm",
+        "picots anti-calcaire",
+        "flexible de douche en acier inoxydable anti-torsion",
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "barre de douche en acier inoxydable",
+        "longueur : env. 80 cm",
+        "support mural réglable en hauteur",
+        "avec porte-savon",
+        "positionnement en continu du support de douche",
+        "avec matériel de montage",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/64830.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets et fonction stop-eau",
+        "taille : Ø env. 10 cm",
+        "picots anti-calcaire",
+        "flexible de douche en acier inoxydable anti-torsion",
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "barre de douche en acier inoxydable",
+        "longueur : env. 60 cm",
+        "avec support de douchette",
+        "positionnement en continu du support de douche",
+        "avec matériel de montage",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/64860.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "5 types de jets et fonction stop-eau",
+        "picots anti-calcaire",
+        "flexible de douche en acier inoxydable anti-torsion",
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "barre de douche en acier inoxydable",
+        "longueur : env. 70 cm",
+        "avec support de douchette",
+        "positionnement en continu du support de douche",
+        "support mural réglable en hauteur",
+        "avec matériel de montage",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/64870.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "5 types de jets",
+        "bouton inverseur pour la fonction stop-eau",
+        "picots anti-calcaire",
+        "flexible de douche en acier inoxydable anti-torsion",
+        "longueur : env. 150 cm",
+        "joint économiseur d'eau inclus",
+        "barre de douche en acier inoxydable",
+        "longueur : env. 80 cm",
+        "support de douchette inclus (avec bouton-poussoir pour le coulissement sur la barre de douche)",
+        "positionnement en continu du support de douche",
+        "avec matériel de montage",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/64926.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets",
+        "picots anti-calcaire",
+        "flexible de douche synthétique anti-torsion en noir mat",
+        "longueur : env. 150 cm",
+        "barre de douche en acier inoxydable",
+        "longueur : env. 70 cm",
+        "support de douchette inclus (avec bouton-poussoir pour le coulissement sur la barre de douche)",
+        "positionnement en continu du support de douche",
+        "avec matériel de montage",
+        "support mural réglable en hauteur",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60740.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "3 types de jets et fonction stop-eau",
+        "taille : Ø env. 10 cm",
+        "picots anti-calcaire",
+        "joint économiseur d'eau inclus",
+        "économisez jusqu'à 50% d'eau (par rapport à une douchette standard avec un débit de 16 l/min à 3 bar de pression d'écoulement)",
+        "Garantie : 2 ans"
+      ],
+
+      // --- SYSTÈMES DE DOUCHES (extraits PDF Systèmes) ---
+      "schutte/60090.png": [
+        'raccord ½" (Ø env. 1,9 cm)',
+        "inverseur (basculer entre douche de tête et douchette)",
+        "douche de tête wellness",
+        "taille (L x l) : env. 20 x 20 cm",
+        "picots anti-calcaire",
+        "taille : Ø env. 10 cm",
+        "flexible de douche en acier inoxydable anti-torsion",
+        "longueur : env. 150 cm",
+        "flexible de raccordement en acier inoxydable",
+        "longueur : env. 70 cm",
+        "barre de douche en acier inoxydable",
+        "support de douchette inclus (avec bouton-poussoir pour le coulissement sur la barre de douche)",
+        "positionnement en continu du support de douche",
+        "angle réglage du support de douche",
+        "support mural réglable en hauteur",
+        "avec matériel de montage",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60096.png": [
+        'raccord ½" (Ø env. 1,9 cm)',
+        "inverseur (basculer entre douche de tête et douchette)",
+        "douche de tête wellness",
+        "taille (L x l) : env. 20 x 20 cm",
+        "taille : Ø env. 10 cm",
+        "picots anti-calcaire",
+        "flexible de douche synthétique anti-torsion en noir mat",
+        "longueur : env. 150 cm",
+        "flexible de raccordement synthétique en noir mat",
+        "longueur : env. 70 cm",
+        "barre de douche en acier inoxydable",
+        "support de douchette inclus (avec bouton-poussoir pour le coulissement sur la barre de douche)",
+        "angle réglage du support de douche",
+        "positionnement en continu du support de douche",
+        "support mural réglable en hauteur",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60690.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "inverseur (basculer entre douche de tête et douchette)",
+        "douche de tête wellness",
+        "taille : Ø env. 22 cm",
+        "3 types de jets",
+        "taille : Ø env. 12 cm",
+        "avec bouton coulissant pour l'inversion du type de jet",
+        "picots anti-calcaire",
+        "flexible de douche synthétique anti-torsion en finition argentée",
+        "longueur : env. 150 cm",
+        "flexible de raccordement synthétique en finition argentée",
+        "longueur : env. 70 cm",
+        "barre de douche en acier inoxydable",
+        "avec support de douchette",
+        "positionnement en continu du support de douche",
+        "convient à toutes les douchettes courantes",
+        "support mural réglable en hauteur",
+        "avec matériel de montage",
+        "joint économiseur d'eau inclus"
+      ],
+      "schutte/60046.png": [
+        'tête de valve céramique ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "échelle de température avec verrouillage de sécurité à 38°C",
+        "inverseur (basculer entre douche de tête et douchette)",
+        "douche de tête wellness",
+        "taille : Ø env. 24 cm",
+        "taille : Ø env. 12 cm",
+        "3 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "flexible de douche synthétique anti-torsion en finition argentée",
+        "longueur : env. 150 cm",
+        "barre de douche en acier inoxydable",
+        "support de douchette inclus (avec bouton-poussoir pour le coulissement sur la barre de douche)",
+        "positionnement en continu du support de douche",
+        "convient à toutes les douchettes courantes",
+        "support mural réglable en hauteur",
+        "avec matériel de montage",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60170.png": [
+        'raccord du flexible de douche ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "échelle de température avec verrouillage de sécurité à 38°C",
+        "inverseur intégré (basculer entre douche de tête et douchette)",
+        "douche de tête wellness",
+        "taille (L x l) : env. 30 x 20 cm",
+        "taille : Ø env. 10 cm",
+        "3 types de jets",
+        "avec bouton coulissant pour l'inversion du type de jet",
+        "picots anti-calcaire",
+        "flexible de douche synthétique anti-torsion en noir mat",
+        "longueur : env. 150 cm",
+        "barre de douche en acier inoxydable réglable en hauteur",
+        "avec support de douchette",
+        "positionnement en continu du support de douche",
+        "convient à toutes les douchettes courantes",
+        "avec matériel de montage",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60179.png": [
+        'raccords ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "échelle de température avec verrouillage de sécurité à 38°C",
+        "inverseur intégré (basculer entre douche de tête et douchette)",
+        "douche de tête wellness",
+        "taille (L x l) : env. 30 x 20 cm",
+        "3 types de jets",
+        "taille : Ø env. 10 cm",
+        "avec bouton-poussoir pour changer de jet",
+        "picots anti-calcaire",
+        "flexible de douche synthétique anti-torsion en finition argentée",
+        "longueur : env. 150 cm",
+        "barre de douche en acier inoxydable réglable en hauteur",
+        "support de douchette inclus (avec bouton-poussoir pour le coulissement sur la barre de douche)",
+        "positionnement en continu du support de douche",
+        "convient à toutes les douchettes courantes",
+        "avec matériel de montage",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+      "schutte/60531.png": [
+        'tête de valve céramique ½" (Ø env. 1,9 cm)',
+        "élément thermostatique remplaçable",
+        "échelle de température avec verrouillage de sécurité à 38°C",
+        "inverseur à bouton-poussoir (basculer entre douche de tête et douchette)",
+        "douche de tête super fine en acier inoxydable",
+        "taille (L x l) : env. 30 x 30 cm",
+        "3 types de jets",
+        "avec bouton-poussoir pour changer de jet",
+        "taille : Ø env. 10 cm",
+        "picots anti-calcaire",
+        "flexible de douche synthétique anti-torsion en finition argentée",
+        "longueur : env. 150 cm",
+        "barre de douche en métal réglable en hauteur",
+        "avec support de douchette",
+        "positionnement en continu du support de douche",
+        "convient à toutes les douchettes courantes",
+        "support mural réglable en hauteur",
+        "avec matériel de montage",
+        "joint économiseur d'eau inclus",
+        "Garantie : 5 ans"
+      ],
+    };
+
+    const PRODUCT_PDFS = {
+      // "schutte/24556.png": "pdf/schutte/24556.pdf",
+    };
+
+    const CAT_SIZES = {
+      "schutte": ["Standard", "S", "M", "L"],
+      "grohe": ["Standard", "S", "M", "L"],
+      "paffoni": ["Standard", "S", "M", "L"],
+    };
+
+    // ✅ Schütte en premier
+    const CATEGORY_UI = [
+      { id: "schutte", label: "Schütte" },
+      { id: "grohe", label: "Grohe" },
+      { id: "paffoni", label: "Paffoni" },
+    ];
+
+    const CAT_ICONS = {
+      "grohe": "vignettes-boutons/grohe.png",
+      "paffoni": "vignettes-boutons/paffoni.png",
+      "schutte": "vignettes-boutons/schutte.png",
+    };
+
+    // ✅ Schütte en premier dans le groupe aussi
+    const CAT_GROUPS = [
+      { id: "brands", label: "Robinetterie", cats: ["schutte", "grohe", "paffoni"] },
+    ];
+
+    const SUB_CATEGORIES = [
+      { id: "evier", label: "Mitigeur évier" },
+      { id: "lavabo", label: "Mitigeur lavabo" },
+      { id: "eaufroide", label: "Robinet eau froide" },
+      { id: "thermo", label: "Mitigeur douche" },
+      { id: "bain", label: "Mitigeur bains douche" },
+      { id: "douchette", label: "Douchette & flexible" },
+      { id: "barre", label: "Set barre de douche" },
+      { id: "accessoire", label: "Accessoire" },
+    ];
+
+    const PRODUCT_SUBCAT = {
+
+      // =========================
+      // SETS DE DOUCHE → barre
+      // =========================
+      "schutte/60170.png": "barre",
+      "schutte/60046.png": "barre",
+      "schutte/60531.png": "barre",
+      "schutte/60690.png": "barre",
+      "schutte/60096.png": "barre",
+      "schutte/60090.png": "barre",
+
+      // ✅ AJOUT
+      "schutte/60179.png": "barre",
+      "schutte/64160.png": "barre",
+      "schutte/64830.png": "barre",
+      "schutte/64860.png": "barre",
+      "schutte/64870.png": "barre",
+      "schutte/64926.png": "barre",
+      "schutte/67111.png": "barre",
+      "schutte/67131.png": "barre",
+
+      // =========================
+      // MITIGEURS DOUCHE → thermo
+      // =========================
+      "schutte/77440.png": "thermo", // PORTO douche
+      "schutte/44406.png": "thermo", // DENVER douche
+      "schutte/52445.png": "thermo", // VICO douche thermo
+      "schutte/33180.png": "thermo", // LOS ANGELES douche thermo
+      "schutte/33186.png": "thermo", // LOS ANGELES douche thermo noir
+
+      // =========================
+      // MITIGEURS BAIN DOUCHE → bain
+      // =========================
+      "schutte/77430.png": "bain",   // PORTO bain/douche
+      "schutte/44306.png": "bain",   // DENVER bain/douche
+      "schutte/52450.png": "bain",   // VICO bain/douche thermo
+      "schutte/33190.png": "bain",   // LOS ANGELES bain/douche thermo
+      "schutte/33196.png": "bain",   // LOS ANGELES bain/douche thermo noir
+
+      // =========================
+      // LAVABO → lavabo
+      // =========================
+      "schutte/33100.png": "lavabo",
+      "schutte/33106.png": "lavabo",
+      "schutte/33120.png": "lavabo",
+      "schutte/33126.png": "lavabo",
+      "schutte/33110.png": "lavabo",
+      "schutte/33116.png": "lavabo",
+      "schutte/77410.png": "lavabo",
+      "schutte/44106.png": "lavabo",
+      "schutte/32210.png": "lavabo",
+
+      // =========================
+      // ROBINETS EAU FROIDE 
+      // =========================
+      "schutte/46951.png": "eaufroide",
+      "schutte/37955.png": "eaufroide",
+      "schutte/37965.png": "eaufroide",
+
+      // ✅ AJOUT (supports / accessoires / inverseur / curseur…)
+      "schutte/66111.png": "accessoire",
+      "schutte/66116.png": "accessoire",
+      "schutte/66121.png": "accessoire",
+      "schutte/66340.png": "accessoire",
+      "schutte/66410.png": "accessoire",
+      "schutte/66421.png": "accessoire",
+      "schutte/69511.png": "accessoire",
+
+      // =========================
+      // DOUCHETTE & FLEXIBLE → douchette
+      // =========================
+      "schutte/60200.png": "douchette",
+      "schutte/60202.png": "douchette",
+      "schutte/60203.png": "douchette",
+      "schutte/60220.png": "douchette",
+      "schutte/60222.png": "douchette",
+      "schutte/60226.png": "douchette",
+      "schutte/60230.png": "douchette",
+
+      "schutte/60700.png": "douchette",
+      "schutte/60740.png": "douchette",
+      "schutte/60791.png": "douchette",
+      "schutte/60811.png": "douchette",
+      "schutte/60947.png": "douchette",
+      "schutte/61861.png": "douchette",
+
+      "schutte/63431.png": "douchette",
+      "schutte/63441.png": "douchette",
+      "schutte/63451.png": "douchette",
+      "schutte/63461.png": "douchette",
+      "schutte/63471.png": "douchette",
+
+      "schutte/63852.png": "douchette",
+      "schutte/63861.png": "douchette",
+      "schutte/63867.png": "douchette",
+      "schutte/63872.png": "douchette",
+      "schutte/63877.png": "douchette",
+      "schutte/63878.png": "douchette",
+      "schutte/63961.png": "douchette",
+
+      "schutte/78016.png": "douchette",
+
+      // =========================
+      // ÉVIER → evier
+      // =========================
+      "schutte/79116.png": "evier",
+      "schutte/79126.png": "evier",
+      "schutte/79760.png": "evier",
+      "schutte/79770.png": "evier",
+      "schutte/79142.png": "evier",
+      "schutte/79147.png": "evier",
+      "schutte/77266.png": "evier",
+      "schutte/35676.png": "evier",
+      "schutte/79616.png": "evier",
+      "schutte/24556.png": "evier",
+      "schutte/79966.png": "evier",
+      "schutte/79586.png": "evier",
+      "schutte/79162.png": "evier",
+      "schutte/79166.png": "evier",
+      "schutte/79161.png": "evier",
+
+      // ✅ AJOUT
+      "schutte/79167.png": "evier",
+      "schutte/79700.png": "evier",
+      "schutte/79705.png": "evier",
+    };
+
+    let activeSubCategory = SUB_CATEGORIES[0]?.id || null;
+
+    let PRICE_MAP = Object.create(null);
+    let STOCK_MAP = Object.create(null);
+    let SIZES_BY_PATH = Object.create(null);
+
+    const DEMO_ENABLED = false;
+    const PLACEHOLDER_SRC = "data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='260'><rect width='100%25' height='100%25' fill='%23f6f6f6'/><rect x='14' y='14' width='572' height='232' rx='18' ry='18' fill='%23ffffff' stroke='%23e1e1e1' stroke-width='3'/><text x='50%25' y='46%25' text-anchor='middle' font-family='Arial, sans-serif' font-size='26' fill='%23666'>Image à venir</text><text x='50%25' y='62%25' text-anchor='middle' font-family='Arial, sans-serif' font-size='16' fill='%23999'>Ajoute tes visuels dans le dossier de la marque</text></svg>";
+
+    const app = document.getElementById("app");
+    const catButtons = document.getElementById("catButtons");
+    const catSelect = document.getElementById("catSelect");
+    const subCatButtons = document.getElementById("subCatButtons");
+
+    function buildSubCatButtons() {
+      if (!subCatButtons) return;
+
+      const items = SUB_CATEGORIES;
+
+      subCatButtons.innerHTML = items.map(s => `
+    <button class="subCatBtn" type="button" data-sub="${s.id}">
+      ${s.label}
+    </button>
+  `).join("");
+
+      subCatButtons.querySelectorAll("button[data-sub]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeSubCategory = btn.dataset.sub || null;
+          syncSubCategoryUI();
+          render();
+        });
+      });
+
+      syncSubCategoryUI();
+    }
+
+    function syncSubCategoryUI() {
+      if (!subCatButtons) return;
+      subCatButtons.querySelectorAll(".subCatBtn").forEach(b => {
+        const v = b.dataset.sub || null;
+        b.classList.toggle("active", v === activeSubCategory);
+      });
+    }
+
+    function normalizeSize(s) { return String(s || "").trim(); }
+    function getKey(path, taille) { return `${path}|${normalizeSize(taille)}`; }
+
+    function stockLabelFor(key) {
+      const raw = STOCK_MAP[key];
+
+      // stock non renseigné => on n'affiche rien
+      if (raw === undefined || raw === null || String(raw).trim() === "") return "";
+
+      const v = Number(String(raw).replace(",", "."));
+      if (!Number.isFinite(v)) return "";
+
+      // rupture si 0 ou négatif, en stock si 1+
+      return (v >= 1) ? "✅ En stock" : "⚠️ Rupture";
+    }
+
+    function getSizeOptions(cat, file) {
+      const pathKey = `${cat}/${file}`;
+      const excelSizes = SIZES_BY_PATH[pathKey];
+      if (Array.isArray(excelSizes) && excelSizes.length) return excelSizes;
+      return CAT_SIZES[cat] || ["Standard"];
+    }
+
+    function getStoredSize(key, fallback) {
+      try {
+        const v = localStorage.getItem("size:" + key);
+        return v ? v : fallback;
+      } catch { return fallback; }
+    }
+    function setStoredSize(key, val) {
+      try { localStorage.setItem("size:" + key, val); } catch { }
+    }
+
+    function pickInitialSize(pathKey, options) {
+      const stored = getStoredSize(pathKey, "");
+      if (stored && options.includes(stored)) {
+        const ks = getKey(pathKey, stored);
+        const vs = Number(STOCK_MAP[ks]);
+        if (vs > 0) return stored;
+      }
+      for (const opt of options) {
+        const k = getKey(pathKey, opt);
+        const v = Number(STOCK_MAP[k]);
+        if (v > 0) return opt;
+      }
+      return options[0] || "";
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} sur ${url}`);
+      return res.json();
+    }
+
+    async function fetchXlsxAsPriceMap(xlsxUrl) {
+      const res = await fetch(xlsxUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} sur ${xlsxUrl}`);
+
+      const buf = await res.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      if (!ws) throw new Error(`Feuille Excel introuvable dans ${xlsxUrl}`);
+
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
+
+      const map = Object.create(null);
+      const stock = Object.create(null);
+
+      for (const r of rows) {
+        let path = String(r.path || r.Path || r.PATH || "").trim();
+        const taille = normalizeSize(r.taille ?? r.Taille ?? r.TAILLE ?? "");
+        let price = r.prix_tvac ?? r.Prix_TVAC ?? r.PRIX_TVAC ?? r.prix ?? r.Prix ?? "";
+        let stockRaw = r.disponible ?? r.Disponible ?? r.DISPO ?? r.dispo ?? r.stock ?? r.Stock ?? "";
+
+        let stockVal = undefined;
+        const stockStr = String(stockRaw).trim();
+        if (stockStr !== "") {
+          const n = Number(stockStr.replace(",", "."));
+          if (Number.isFinite(n)) stockVal = n;
+        }
+
+        if (!path) continue;
+        path = path.replaceAll("\\", "/").replace(/^\.?\//, "");
+
+        if (typeof price === "string") price = price.replace(",", ".").trim();
+        const num = Number(price);
+
+        const k = getKey(path, taille);
+
+        if (stockVal !== undefined) stock[k] = stockVal;
+
+        if (Number.isFinite(num)) {
+          map[k] = num;
+        }
+      }
+      return { map, stock };
+    }
+
+    function buildSizesByPath(priceMap) {
+      const idx = Object.create(null);
+      for (const k of Object.keys(priceMap)) {
+        const sep = k.indexOf("|");
+        if (sep === -1) continue;
+        const pathKey = k.slice(0, sep);
+        const taille = normalizeSize(k.slice(sep + 1));
+        if (!pathKey || !taille) continue;
+        if (/\.(png|jpg|jpeg|webp)$/i.test(taille)) continue;
+        (idx[pathKey] ||= []).push(taille);
+      }
+      const collator = new Intl.Collator("fr", { numeric: true, sensitivity: "base" });
+      for (const p of Object.keys(idx)) {
+        idx[p] = Array.from(new Set(idx[p])).sort((a, b) => collator.compare(String(a), String(b)));
+      }
+      return idx;
+    }
+
+    function seedDemoDataIfEmpty() {
+      if (!DEMO_ENABLED) return;
+      if (Object.keys(PRICE_MAP).length) return;
+
+      for (const cat of Object.keys(IMAGES)) {
+        for (const f of IMAGES[cat]) {
+          const pathKey = `${cat}/${f}`;
+          const sizes = CAT_SIZES[cat] || ["Standard"];
+          sizes.forEach((s, i) => {
+            const key = getKey(pathKey, s);
+            const base = (cat === "grohe") ? 119.9 : (cat === "paffoni") ? 89.9 : 59.9;
+            const price = base + (i * 12.5);
+            PRICE_MAP[key] = Math.round(price * 100) / 100;
+            STOCK_MAP[key] = (i === 0) ? 8 : (i === 1 ? 0 : 3);
+          });
+        }
+      }
+      SIZES_BY_PATH = buildSizesByPath(PRICE_MAP);
+    }
+
+    async function loadPricesFromFolder() {
+      try {
+        const { map, stock } = await fetchXlsxAsPriceMap("prix/prix.xlsx");
+        PRICE_MAP = map;
+        STOCK_MAP = stock;
+        SIZES_BY_PATH = buildSizesByPath(PRICE_MAP);
+      } catch (e) {
+        console.warn("Aucun fichier prix trouvé ou erreur lecture :", e);
+        PRICE_MAP = Object.create(null);
+        STOCK_MAP = Object.create(null);
+        SIZES_BY_PATH = Object.create(null);
+      }
+    }
+
+    function formatPrice(v) {
+      if (!Number.isFinite(v)) return "";
+      return (Math.round(v * 100) / 100).toFixed(2);
+    }
+
+    const categories = CATEGORY_UI.filter(c => IMAGES[c.id]);
+    let activeCat = categories[0]?.id || "__none__"; // ✅ Schütte sera actif par défaut
+
+    function buildCatButtons() {
+      const catById = Object.fromEntries(categories.map(c => [c.id, c]));
+      const mkBtn = (c) => {
+        const icon = CAT_ICONS[c.id];
+        return `
+          <button class="catBtn ${c.id === activeCat ? 'active' : ''}" data-cat="${c.id}" type="button">
+            ${icon ? `<div class="catIcon"><img src="${icon}" alt=""></div>` : ``}
+            <span>${c.label}</span>
+          </button>
+        `;
+      };
+
+      catButtons.innerHTML = CAT_GROUPS.map(g => {
+        const list = g.cats.map(id => catById[id]).filter(Boolean);
+        if (!list.length) return "";
+        return `
+          <div class="catGroup" data-group="${g.id}">
+            <div class="catGroupTitle">${g.label}</div>
+            <div class="catGroupRow">
+              ${list.map(mkBtn).join("")}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      catButtons.querySelectorAll("button[data-cat]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeCat = btn.dataset.cat;
+
+          activeSubCategory = SUB_CATEGORIES[0]?.id || null;
+          syncSubCategoryUI();
+          syncCategoryUI();
+          render();
+        });
+      });
+    }
+
+    function buildCatSelect() {
+      const catById = Object.fromEntries(categories.map(c => [c.id, c]));
+      catSelect.innerHTML = CAT_GROUPS.map(g => {
+        const list = g.cats.map(id => catById[id]).filter(Boolean);
+        if (!list.length) return "";
+        return `
+          <optgroup label="${g.label}">
+            ${list.map(c => `<option value="${c.id}">${c.label}</option>`).join("")}
+          </optgroup>
+        `;
+      }).join("");
+
+      catSelect.addEventListener("change", () => {
+        activeCat = catSelect.value;
+
+        activeSubCategory = SUB_CATEGORIES[0]?.id || null;
+        syncSubCategoryUI();
+
+        syncCategoryUI();
+        render();
+      });
+    }
+
+    function syncCategoryUI() {
+      if (catSelect) catSelect.value = activeCat;
+      document.querySelectorAll("#catButtons .catBtn").forEach(b => {
+        b.classList.toggle("active", b.dataset.cat === activeCat);
+      });
+    }
+
+    function render() {
+      const cat = activeCat;
+      const files = IMAGES[cat] || [];
+
+      let html = `<div class="grid">`;
+
+      for (const f of files) {
+        const pathKey = `${cat}/${f}`;
+        const isPlaceholder = String(f).startsWith("__placeholder");
+        const src = isPlaceholder ? PLACEHOLDER_SRC : `${cat}/${encodeURIComponent(f)}`;
+
+        // ✅ clé exactement identique : "schutte/xxxx.png"
+        const fallbackLabel = (isPlaceholder ? "Produit (à renseigner)" : f)
+          .replace(/\.(png|jpg|jpeg|webp)$/i, "")
+          .replace(/[-_]/g, " ");
+
+        const label = (DISPLAY_NAMES[pathKey] ?? fallbackLabel);
+        const sub = PRODUCT_SUBCAT[pathKey] ?? null;
+        if (activeSubCategory && sub !== activeSubCategory) continue;
+
+        const currentSize = "";
+
+        const k = getKey(pathKey, currentSize);
+        const price = PRICE_MAP[k];
+        const stockText = stockLabelFor(k);
+
+        const stockId = "st_" + btoa(pathKey).replace(/=+/g, '');
+
+        const priceSection = (price !== undefined)
+          ? (() => {
+            const s = formatPrice(price);
+            const [intPart, decPart = "00"] = s.split(".");
+            return `
+        <div class="price">
+          <div class="price-label">Tvac</div>
+          <div class="price-amount">
+            <span class="int">${intPart}</span>
+            <span class="dec">${decPart}</span>
+            <span class="eur">€</span>
+          </div>
+        </div>
+      `;
+          })()
+          : "";
+
+        html += `
+          <figure>
+            <figcaption>
+             <a href="#" class="titleLink openDesc" data-desc-key="${pathKey}">${label}</a>
+            </figcaption>
+
+            <a href="#" class="thumb openDesc" data-desc-key="${pathKey}">
+              <img src="${src}" alt="${label}">
+            </a>
+
+            <div class="stock" id="${stockId}">${stockText}</div>
+
+            ${priceSection}
+          </figure>
+        `;
+      }
+
+      html += `</div>`;
+      app.innerHTML = html;
+
+      sendHeightSoon();
+
+    }
+
+    // ======================
+    // Modal descriptif
+    // ======================
+    const descModal = document.getElementById("descModal");
+    const descTitle = document.getElementById("descTitle");
+    const descBody = document.getElementById("descBody");
+
+    function openDescByKey(key) {
+      if (!descModal || !descTitle || !descBody) return;
+
+      const title = DISPLAY_NAMES[key]
+        ?? String(key).split("/").pop().replace(/\.(png|jpg|jpeg|webp)$/i, "").replace(/[-_]/g, " ");
+
+      const items = DESCRIPTIFS[key]; // <= IMPORTANT : clé "schutte/xxxx.png"
+      if (!items || !items.length) return; // si pas de descriptif, on n'ouvre rien
+
+      descTitle.textContent = title;
+
+      // Uniquement les descriptifs : liste simple
+      descBody.innerHTML = `<ul>${items.map(t => `<li>${String(t)}</li>`).join("")}</ul>`;
+
+      descModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeDesc() {
+      if (!descModal) return;
+      descModal.setAttribute("aria-hidden", "true");
+    }
+
+    // Click (délégation) : titre ou photo
+    document.addEventListener("click", (e) => {
+      const opener = e.target.closest(".openDesc");
+      if (opener) {
+        e.preventDefault();
+        const key = opener.getAttribute("data-desc-key");
+        if (key) openDescByKey(key);
+        return;
+      }
+
+      // Fermeture
+      const closeBtn = e.target.closest("[data-close='1']");
+      if (closeBtn) {
+        e.preventDefault();
+        closeDesc();
+      }
+    });
+
+    // Touche ESC pour fermer
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeDesc();
+    });
+
+    (async function init() {
+      try {
+        await loadPricesFromFolder(); // si manifest absent => OK
+        seedDemoDataIfEmpty();        // ✅ prérempli (prix/stock) si rien n’a été chargé
+        buildCatButtons();
+        buildCatSelect();
+        buildSubCatButtons();
+        syncCategoryUI();
+        render();
+      } catch (e) {
+        console.error("Init error:", e);
+        app.innerHTML = `<p class="missing">❌ Erreur JavaScript: ${String(e && e.message ? e.message : e)}</p>`;
+      }
+    })();
+
+  </script>
+</body>
+
+</html>
