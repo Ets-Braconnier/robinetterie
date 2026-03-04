@@ -35,9 +35,17 @@ body {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, 260px);
   gap: 10px;
-  align-items: stretch;
+  justify-content: center;
+  align-items: start;
+}
+
+/* mobile : une colonne */
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 figure {
@@ -242,8 +250,8 @@ header.top {
 .catBtn .catIcon img {
   width: 100%;
   height: 100%;
-  object-fit: contain; 
-  padding: 5px;       
+  object-fit: contain;
+  padding: 5px;
   background: #fff;
   border-radius: 50%;
   display: block;
@@ -302,7 +310,7 @@ header.top {
 }
 
 /* séparation visuelle entre groupes */
-.catGroup + .catGroup {
+.catGroup+.catGroup {
   border-left: 1px solid rgba(158, 124, 50, 0.35);
   padding-left: 18px;
   margin-left: 18px;
@@ -330,7 +338,8 @@ header.top {
 
 .nav-row {
   display: grid;
-  grid-template-columns: max-content 1fr; /* gauche = menu, droite = reste */
+  grid-template-columns: max-content 1fr;
+  /* gauche = menu, droite = reste */
   align-items: center;
   column-gap: 16px;
   width: 100%;
@@ -338,7 +347,8 @@ header.top {
 
 /* Attention : #catButtons est l’ID du conteneur des boutons (dans ton HTML) */
 #catButtons {
-  width: auto !important; /* écrase un width:100% éventuel */
+  width: auto !important;
+  /* écrase un width:100% éventuel */
   min-width: 0;
 }
 
@@ -350,7 +360,7 @@ header.top {
   flex: 1 1 auto;
 }
 
-.nuancier-mini > div {
+.nuancier-mini>div {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -435,7 +445,8 @@ header.top {
    RESPONSIVE
 ====================== */
 
-@media (max-width: 700px), (pointer: coarse) {
+@media (max-width: 700px),
+(pointer: coarse) {
   body {
     margin: 12px;
   }
@@ -541,7 +552,9 @@ header.top {
   font-weight: 700;
 }
 
-.subCatBtn:hover { background: #f5f0e3; }
+.subCatBtn:hover {
+  background: #f5f0e3;
+}
 
 .subCatBtn.active {
   background: #c6a04a;

@@ -1372,10 +1372,42 @@
     const catSelect = document.getElementById("catSelect");
     const subCatButtons = document.getElementById("subCatButtons");
 
+    function getAvailableSubCats(catId) {
+      const files = IMAGES[catId] || [];
+      const set = new Set();
+      for (const f of files) {
+        const key = `${catId}/${f}`;
+        const sub = PRODUCT_SUBCAT[key];
+        if (sub) set.add(sub);
+      }
+      return SUB_CATEGORIES.filter(s => set.has(s.id));
+    }
+
+    function getAvailableSubCats(catId) {
+      const files = IMAGES[catId] || [];
+      const set = new Set();
+      for (const f of files) {
+        const key = `${catId}/${f}`;
+        const sub = PRODUCT_SUBCAT[key];
+        if (sub) set.add(sub);
+      }
+      return SUB_CATEGORIES.filter(s => set.has(s.id));
+    }
+
     function buildSubCatButtons() {
       if (!subCatButtons) return;
 
-      const items = SUB_CATEGORIES;
+      const items = getAvailableSubCats(activeCat);
+
+      if (!items.length) {
+        subCatButtons.innerHTML = "";
+        activeSubCategory = null;
+        return;
+      }
+
+      if (!items.some(s => s.id === activeSubCategory)) {
+        activeSubCategory = items[0].id;
+      }
 
       subCatButtons.innerHTML = items.map(s => `
     <button class="subCatBtn" type="button" data-sub="${s.id}">
@@ -1589,8 +1621,7 @@
         btn.addEventListener("click", () => {
           activeCat = btn.dataset.cat;
 
-          activeSubCategory = SUB_CATEGORIES[0]?.id || null;
-          syncSubCategoryUI();
+          buildSubCatButtons();
           syncCategoryUI();
           render();
         });
@@ -1612,9 +1643,7 @@
       catSelect.addEventListener("change", () => {
         activeCat = catSelect.value;
 
-        activeSubCategory = SUB_CATEGORIES[0]?.id || null;
-        syncSubCategoryUI();
-
+        buildSubCatButtons();
         syncCategoryUI();
         render();
       });
