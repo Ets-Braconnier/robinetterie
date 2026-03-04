@@ -560,3 +560,20 @@ header.top {
   background: #c6a04a;
   color: #fff;
 }
+
+.modalImage {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.modalImage img {
+  width: 100%;
+  max-width: 680px;
+  max-height: 55vh;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+}
