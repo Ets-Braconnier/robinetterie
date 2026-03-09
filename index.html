@@ -196,6 +196,11 @@
         "79770.png",
         "79966.png",
       ],
+
+      "ideal-standard": [
+        "black-mat.png",
+        "silver.png"
+      ],
     };
 
     const DISPLAY_NAMES = {
@@ -370,6 +375,9 @@
       "grohe/28150.png": "Flexible 125 1/2x1/2",
       "grohe/26696000.png": "Colonne de douche 26696000",
       "grohe/26677000.png": "Colonne de douche 26677000",
+
+      "ideal-standard/black-mat.png": "Mitigeur Ideal Standard noir mat",
+      "ideal-standard/silver.png": "Mitigeur Ideal Standard chromé",
     };
 
     const DESCRIPTIFS = {
@@ -1212,16 +1220,18 @@
       { id: "schutte", label: "Schütte" },
       { id: "grohe", label: "Grohe" },
       { id: "paffoni", label: "Paffoni" },
+      { id: "ideal-standard", label: "Ideal Standard" },
     ];
 
     const CAT_ICONS = {
       "grohe": "vignettes/grohe.png",
       "paffoni": "vignettes/paffoni.png",
       "schutte": "vignettes/schutte.png",
+      "ideal-standard": "vignettes/ideal-standard.png",
     };
 
     const CAT_GROUPS = [
-      { id: "brands", label: "", cats: ["schutte", "grohe", "paffoni"] },
+      { id: "brands", label: "", cats: ["schutte", "grohe", "paffoni", "ideal-standard"] },
     ];
 
     const SUB_CATEGORIES = [
@@ -1357,8 +1367,6 @@
       "schutte/79162.png": "evier",
       "schutte/79166.png": "evier",
       "schutte/79161.png": "evier",
-
-      // ✅ AJOUT
       "schutte/79167.png": "evier",
       "schutte/79700.png": "evier",
       "schutte/79705.png": "evier",
@@ -1438,6 +1446,10 @@
       // set barre / colonne de douche
       "grohe/26696000.png": "barre",
       "grohe/26677000.png": "barre",
+
+      // ideal standard
+      "ideal-standard/black-mat.png": "barre",
+      "ideal-standard/silver.png": "barre",
     };
 
     let activeSubCategory = SUB_CATEGORIES[0]?.id || null;
