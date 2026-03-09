@@ -496,7 +496,11 @@ header.top {
 
 .modalPanel {
   position: relative;
-  max-width: 720px;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
   margin: 6vh auto;
   background: #fff;
   border-radius: 16px;
@@ -569,9 +573,9 @@ header.top {
 }
 
 .modalImage img {
-  width: 100%;
-  max-width: 680px;
-  max-height: 55vh;
+  width: auto;
+  max-width: 420px;
+  max-height: 38vh;
   object-fit: contain;
   border-radius: 12px;
   border: 1px solid #e6e6e6;
