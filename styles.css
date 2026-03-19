@@ -304,9 +304,10 @@ header.top {
 
 .catGroupRow {
   display: flex;
-  gap: var(--cat-gap);
-  justify-content: center;
-  flex-wrap: nowrap;
+  gap: 22px;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 /* séparation visuelle entre groupes */
@@ -541,9 +542,10 @@ header.top {
 
 .subCatButtons {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 6px 0 10px;
+  justify-content: flex-start;
+  width: min(var(--max), 100% - 32px);
+  margin: 0 auto;
+  padding: 10px 0 4px;
 }
 
 .subCatBtn {
